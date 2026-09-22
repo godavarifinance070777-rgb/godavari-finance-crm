@@ -1,7 +1,7 @@
 // Database Client Configuration
-const SUPABASE_PROJECT_URL = "https://twgdrkhzgkbuonlqdwlh.supabase.co/rest/v1/";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3Z2Rya2h6Z2tidW9ubHFkd2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNDkzMDksImV4cCI6MjEwNTYyNTMwOX0.s222BYkDhG_ACImEZTivkq-HynLD_rLy-gj7xkPpdSc";
-
+const SUPABASE_PROJECT_URL = "https://twgdrkhzgkbuonlqdwlh.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3Z2Rya2h6Z2tidW9ubHFkd2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNDkzMDksImV4cCI6MjEwNTYyNTMwOX0.s222BYkDhG_ACImEZTivkq-HynLD_rLy-gj7xkPpdSc
+"; // <-- Replace with the entire string you copied
 const supabaseClient = window.supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentProfile = null;
