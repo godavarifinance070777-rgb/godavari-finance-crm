@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Godavari Finance CRM</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="auth-screen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="brand-badge">GF</div>
+      <h2>Godavari Finance CRM</h2>
+      <p class="auth-subtitle">Internal Loan & Ledger Management</p>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label>Staff Email</label>
+          <input type="email" id="login-email" required placeholder="admin@godavarifinance.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary">Sign In</button>
+      </form>
+      <div id="login-alert" class="alert hidden"></div>
+    </div>
+  </div>
+
+  <div id="app-screen" class="app-layout hidden">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-badge">GF</div>
+        <div>
+          <h3>GODAVARI</h3>
+          <span>FINANCE CRM</span>
+        </div>
+      </div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-page="dashboard">Dashboard</button>
+        <button class="nav-item" data-page="customers">Customers</button>
+        <button class="nav-item" data-page="loans">Loans</button>
+        <button class="nav-item" data-page="payments">Payments</button>
+        <button class="nav-item" data-page="reports">Reports</button>
+        <button class="nav-item super-admin-only hidden" data-page="admins">Admin Mgmt</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-meta">
+          <strong id="user-display-name">Loading...</strong>
+          <span id="user-display-role" class="badge">Staff</span>
+        </div>
+        <button id="logout-btn" class="btn btn-logout">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <h1 id="page-title">Dashboard</h1>
+        <div class="date-badge" id="current-date-badge"></div>
+      </header>
+
+      <section id="page-dashboard" class="page-view">
+        <div class="kpi-grid">
+          <div class="kpi-card"><span>Total Customers</span><h2 id="kpi-customers">0</h2></div>
+          <div class="kpi-card"><span>Total Loans</span><h2 id="kpi-loans">0</h2></div>
+          <div class="kpi-card"><span>Total Principal</span><h2 id="kpi-principal">₹0</h2></div>
+          <div class="kpi-card"><span>Total Payable</span><h2 id="kpi-payable">₹0</h2></div>
+          <div class="kpi-card"><span>Total Collected</span><h2 id="kpi-collected">₹0</h2></div>
+          <div class="kpi-card alert-card"><span>Outstanding</span><h2 id="kpi-outstanding">₹0</h2></div>
+        </div>
+      </section>
+
+      <section id="page-customers" class="page-view hidden">
+        <div class="action-bar">
+          <input type="text" id="cust-search" placeholder="Search customer name, mobile, ID..." />
+          <button class="btn btn-primary" onclick="window.openModal('customer-modal')">+ Add Customer</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Customer ID</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Loans</th>
+                <th>Outstanding</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customers-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="page-loans" class="page-view hidden">
+        <div class="action-bar">
+          <input type="text" id="loan-search" placeholder="Search loan ID, customer..." />
+          <button class="btn btn-primary" onclick="window.openModal('loan-modal')">+ New Loan</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Loan ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Principal</th>
+                <th>Payable</th>
+                <th>Paid</th>
+                <th>Outstanding</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="loans-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="page-payments" class="page-view hidden">
+        <div class="action-bar">
+          <input type="text" id="payment-search" placeholder="Search customer, reference..." />
+          <button class="btn btn-primary" onclick="window.openModal('payment-modal')">+ Record Payment</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Loan ID</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="page-reports" class="page-view hidden">
+        <div class="export-cards-grid">
+          <div class="card">
+            <h3>Customer Balances</h3>
+            <p>Export all registered customers and overall financial balances.</p>
+            <button class="btn btn-secondary" onclick="window.exportCustomersCSV()">Export CSV</button>
+          </div>
+          <div class="card">
+            <h3>Loan Book Summary</h3>
+            <p>Export all active and completed daily and weekly loans.</p>
+            <button class="btn btn-secondary" onclick="window.exportLoansCSV()">Export CSV</button>
+          </div>
+          <div class="card">
+            <h3>Collection Ledger</h3>
+            <p>Export complete payment receipts, cash receipts, and UPI logs.</p>
+            <button class="btn btn-secondary" onclick="window.exportPaymentsCSV()">Export CSV</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-admins" class="page-view hidden">
+        <div class="action-bar">
+          <h2>Admin Management</h2>
+          <button class="btn btn-primary" onclick="window.openModal('admin-modal')">+ Add Admin</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admins-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <div id="customer-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Add New Customer</h3>
+      <form id="add-customer-form">
+        <label>Full Name *</label>
+        <input type="text" id="cust-name" required />
+        <label>Mobile Number *</label>
+        <input type="tel" id="cust-mobile" required pattern="[0-9]{10}" placeholder="10-digit mobile" />
+        <label>Address</label>
+        <textarea id="cust-address"></textarea>
+        <label>Notes</label>
+        <textarea id="cust-notes"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="window.closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="loan-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Disburse New Loan</h3>
+      <form id="add-loan-form">
+        <label>Customer *</label>
+        <select id="loan-cust-select" required></select>
+        <label>Principal Amount (₹) *</label>
+        <input type="number" id="loan-principal" min="100" step="100" required />
+        <label>Repayment Type *</label>
+        <select id="loan-type-select" required>
+          <option value="daily">Daily (20% Fixed)</option>
+          <option value="weekly">Weekly (26% Fixed)</option>
+        </select>
+        <div class="calculation-preview">
+          <div>Fixed Rate: <strong id="preview-rate">20%</strong></div>
+          <div>Total Payable: <strong id="preview-payable">₹0</strong></div>
+        </div>
+        <label>Loan Date *</label>
+        <input type="date" id="loan-date" required />
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="window.closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Issue Loan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="payment-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Record Payment Receipt</h3>
+      <form id="add-payment-form">
+        <label>Select Loan *</label>
+        <select id="pay-loan-select" required></select>
+        <div class="calculation-preview">
+          <div>Payable: <span id="pay-prev-payable">₹0</span></div>
+          <div>Total Paid: <span id="pay-prev-paid">₹0</span></div>
+          <div>Current Outstanding: <strong id="pay-prev-outstanding">₹0</strong></div>
+        </div>
+        <label>Payment Amount (₹) *</label>
+        <input type="number" id="pay-amount" min="1" step="1" required />
+        <label>Payment Method *</label>
+        <select id="pay-method" required>
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Other">Other</option>
+        </select>
+        <label>Reference No. / UTR</label>
+        <input type="text" id="pay-reference" placeholder="e.g. UPI Ref / Receipt No." />
+        <label>Payment Date *</label>
+        <input type="date" id="pay-date" required />
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="window.closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="admin-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Add Admin User</h3>
+      <form id="add-admin-form">
+        <label>Full Name *</label>
+        <input type="text" id="admin-name" required />
+        <label>Staff Email *</label>
+        <input type="email" id="admin-email" required />
+        <label>Temporary Password *</label>
+        <input type="password" id="admin-password" required minlength="6" />
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="window.closeModals()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
